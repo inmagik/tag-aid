@@ -107,6 +107,8 @@ class Text extends Component {
       isGraphLoading,
     } = this.props;
 
+    console.log("searchTextResults", searchTextResults)
+
     return (
       <Grid>
           <Row> {/* TEXT NAME */}

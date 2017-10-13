@@ -95,46 +95,53 @@ export default class Graph extends Component {
     // First node map
     let nodePosMap = makeNodePosMap(allNodes)
 
+    // console.log("viewedPosition", viewedPosition)
+
     // Calculate missing nodes
-    // const missingNodes = allLinks.reduce((result, link) => {
-    //   const missing = {}
-    //   if (typeof nodePosMap[link.source] === 'undefined') {
-    //     missing[link.source] = { id: link.source, text: 'X', rank: viewedPosition.start, fake: true }
-    //   }
-      // if (typeof nodePosMap[link.target] === 'undefined') {
-      //   missing[link.target] = { id: link.target, text: 'X' , rank: 0}
-      // }
-      // return { ...result, ...missing }
-    // }, {})
+    const missingNodes = allLinks.reduce((result, link) => {
+      const missing = {}
+      if (typeof nodePosMap[link.source] === 'undefined') {
+        missing[link.source] = { id: link.source, text: 'OUT SOURCE', rank: viewedPosition.start, Xfake: true }
+      }
+      if (typeof nodePosMap[link.target] === 'undefined') {
+        missing[link.target] = { id: link.target, text: 'OUT TARGET' , rank: viewedPosition.end, Xfake: true }
+      }
+      return { ...result, ...missing }
+    }, {})
 
     // Sankey nodes
     const nodes = [ ...allNodes ];
 
-    // let xN = Object.keys(missingNodes).map(k => missingNodes[k])
-    // const nodes = [ ...xN, ...allNodes ];
+    let xN = Object.values(missingNodes)
+    console.log("xn", xN)
+    const nodesWithMissing = xN.concat(allNodes)
 
     // Re-build node map with missing nodes
-    // nodePosMap = makeNodePosMap(nodes)
+    nodePosMap = makeNodePosMap(nodesWithMissing)
 
     // Sankey links
-    const links = allLinks.map(link => ({
-      ...link,
-      source: nodePosMap[link.source],
-      target: nodePosMap[link.target]
-    }))
-    .filter(link => typeof link.source !== 'undefined' && typeof link.target !== 'undefined')
+    const links = allLinks.map(link => {
+      console.log(link.id, link.source, link.target, nodePosMap[link.source], nodePosMap[link.target] )
+      return {
+        ...link,
+        source: nodePosMap[link.source],
+        target: nodePosMap[link.target],
+      }
+    })
+    // .filter(link => typeof link.source !== 'undefined' && typeof link.target !== 'undefined')
     // FIXME: Do the right sort before
     .sort((a, b) => Number(a.source) - Number(b.source))
 
-    console.info("nodes and links", nodes.length, links.length)
+
+    console.info("nodes and links", nodesWithMissing, links)
 
     const sankeyLayout = sankey()
-        .nodes(nodes)
+        .nodes(nodesWithMissing)
         .links(links)
         .nodeWidth(2)
         .nodePadding(35)
         .size([width, height])
-        .layout(150);
+        .layout();
 
   let path = sankeyLayout.link();
   const colorScale = this.makeColorScale();
@@ -161,7 +168,8 @@ export default class Graph extends Component {
         })
         // .style("visibility", this.props.showEdges ? "visible" : "hidden")
         .attr("d", path)
-        .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+        // .style("stroke-width", function(d) { console.log("d", d); return Math.max(1, d.dy); })
+        .style("stroke-width", function(d) { console.log("d", d); return d.value; })
         .style("stroke", (d) => {
           if (this.props.showEdges && isLinkGraphWitness(d)) {
             return colorScale(this.props.witness);
@@ -187,7 +195,8 @@ export default class Graph extends Component {
     var node = d3.select(this.nodeGroup).selectAll(".node")
         .data(nodes, d => +d.id)
         .attr("transform", function(d) {
-  		  return "translate(" + d.x + "," + d.y + ")"; })
+  		      return `translate("${d.dx}, ${d.dy.toFixed(2)}")`
+        })
 
     node.exit().remove();
 
@@ -196,12 +205,13 @@ export default class Graph extends Component {
         .attr("class", function(d) {
           return d.fake ? 'node fake' : 'node'
          })
-        .attr("transform", function(d) {
-  		  return "translate(" + d.x + "," + d.y + ")"; })
-      .call(d3.drag()
+         .attr("transform", function(d) {
+   		      return `translate("${d.dx}, ${d.dy.toFixed(2)}")`
+         })
+         .call(d3.drag()
         // .origin(function(d) { return d; })
-        .on("start", function() {
-  		  this.parentNode.appendChild(this); })
+        // .on("start", function() {
+  		  // this.parentNode.appendChild(this); })
         .on("drag", dragmove))
 
     // add the rectangles for the nodes
@@ -211,7 +221,7 @@ export default class Graph extends Component {
           //return Math.abs(d.dy);
         })
         .attr("width", 2)
-        .style("fill", "#ddd")
+        .style("fill", "blue")
         .style("opacity", 1)
       .append("title")
         .text(d => {
