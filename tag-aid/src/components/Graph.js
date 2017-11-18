@@ -143,9 +143,14 @@ export default class Graph extends Component {
         .size([width, height])
         .layout();
 
+    console.log("sankeyLayout", sankeyLayout)
+
   let path = sankeyLayout.link();
+  console.log("sankeyPath", path)
   const colorScale = this.makeColorScale();
 
+    // computing height 50px
+    const heigthUnitValue = 50 / this.props.witnesses.length
 
     // add in the links
     var link = d3.select(this.linkGroup).selectAll(".link")
@@ -169,7 +174,10 @@ export default class Graph extends Component {
         // .style("visibility", this.props.showEdges ? "visible" : "hidden")
         .attr("d", path)
         // .style("stroke-width", function(d) { console.log("d", d); return Math.max(1, d.dy); })
-        .style("stroke-width", function(d) { console.log("d", d); return d.value; })
+        .style("stroke-width", function(d) { console.log("d", path(d)); return 1
+          // d.value * heigthUnitValue;
+        })
+
         .style("stroke", (d) => {
           if (this.props.showEdges && isLinkGraphWitness(d)) {
             return colorScale(this.props.witness);
