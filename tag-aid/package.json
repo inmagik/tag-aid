@@ -7,8 +7,8 @@
     "react-scripts": "0.7.0"
   },
   "dependencies": {
-    "d3": "^4.10.0",
-    "d3-sankey": "^0.4.2",
+    "d3": "^7.6.1",
+    "d3-sankey": "^0.12.3",
     "lodash": "^4.17.2",
     "rc-slider": "^5.4.0",
     "react": "^15.3.2",
